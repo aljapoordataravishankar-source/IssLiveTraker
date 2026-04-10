@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Live ISS Tracker</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Space+Mono&display=swap" rel="stylesheet">
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/satellite.js/dist/satellite.min.js"></script>
+    <script>
+        // Make satellite library available to modules
+        window.satellite = window.satellite || satellite;
+    </script>
+</head>
+<body>
+    <div id="loading" class="overlay">
+        <div class="loader">
+            <div class="spinner"></div>
+            <p>Acquiring TLE Data & Textures...</p>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <main id="hud">
+        <header class="hud-panel glass">
+            <h1>ISS LIVE TRACKER</h1>
+            <div class="status">
+                <span class="dot pulse"></span>
+                <span>SYSTEM ONLINE</span>
+            </div>
+        </header>
+
+        <section class="telemetry hud-panel glass">
+            <h2>Live Telemetry</h2>
+            <div class="data-grid">
+                <div class="data-group">
+                    <label>Latitude</label>
+                    <span id="tel-lat" class="mono">--.----°</span>
+                </div>
+                <div class="data-group">
+                    <label>Longitude</label>
+                    <span id="tel-lon" class="mono">--.----°</span>
+                </div>
+                <div class="data-group">
+                    <label>Altitude</label>
+                    <span id="tel-alt" class="mono">---.-- km</span>
+                </div>
+                <div class="data-group">
+                    <label>Velocity</label>
+                    <span id="tel-vel" class="mono">--.-- km/s</span>
+                </div>
+                <div class="data-group">
+                    <label>Period</label>
+                    <span id="tel-period" class="mono">--.-- min</span>
+                </div>
+                <div class="data-group">
+                    <label>Time (UTC)</label>
+                    <span id="tel-time" class="mono">--:--:--</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="predictions hud-panel glass">
+            <h2>Next Passes (Local)</h2>
+            <button id="btn-locate" class="btn primary">Detect My Location</button>
+            <p id="loc-status" class="status-msg"></p>
+            <ul id="pass-list" class="mono">
+                <li class="placeholder">Awaiting location...</li>
+            </ul>
+        </section>
+
+        <section class="controls hud-panel glass">
+            <h2>Controls</h2>
+            <div class="control-row">
+                <button id="btn-follow" class="btn active">Follow ISS</button>
+                <button id="btn-reset" class="btn">Reset View</button>
+            </div>
+            <div class="control-row time-control">
+                <label for="time-slider">Time Simulation</label>
+                <div class="slider-wrapper">
+                    <span>-12h</span>
+                    <input type="range" id="time-slider" min="-720" max="720" value="0" step="1">
+                    <span>+12h</span>
+                </div>
+                <div class="time-offset mono" id="time-offset-label">Live Time</div>
+                <button id="btn-live" class="btn small hidden">Go Live</button>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="js/main.js"></script>
+
+
+</body>
+</html>
