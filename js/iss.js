@@ -1,4 +1,5 @@
 // js/iss.js
+import * as satellite from 'satellite.js';
 
 const ISS_TLE_URL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle';
 
@@ -10,7 +11,7 @@ let satrec = null;
 
 export async function loadTLE() {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased timeout to 10s
     
     try {
         const response = await fetch(ISS_TLE_URL, { signal: controller.signal });
@@ -29,7 +30,7 @@ export async function loadTLE() {
         }
         
         if (tle1 && tle2) {
-            satrec = window.satellite.twoline2satrec(tle1, tle2);
+            satrec = satellite.twoline2satrec(tle1, tle2);
             return satrec;
         }
     } catch (e) {
@@ -38,7 +39,7 @@ export async function loadTLE() {
     
     // Fallback
     const fallbackLines = STANDBY_TLE.split('\n').map(l => l.trim());
-    satrec = window.satellite.twoline2satrec(fallbackLines[1], fallbackLines[2]);
+    satrec = satellite.twoline2satrec(fallbackLines[1], fallbackLines[2]);
     return satrec;
 }
 
@@ -49,11 +50,11 @@ export function getSatrec() {
 export function getPositionData(date = new Date()) {
     if (!satrec) return null;
     
-    const posVel = window.satellite.propagate(satrec, date);
+    const posVel = satellite.propagate(satrec, date);
     if (!posVel.position || posVel.position === false) return null;
 
-    const gmst = window.satellite.gstime(date);
-    const geodetic = window.satellite.eciToGeodetic(posVel.position, gmst);
+        const gmst = satellite.gstime(date);
+        const geodetic = satellite.eciToGeodetic(posVel.position, gmst);
     
     const velocityKmS = Math.sqrt(
         Math.pow(posVel.velocity.x, 2) + 

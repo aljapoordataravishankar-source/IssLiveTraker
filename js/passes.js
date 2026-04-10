@@ -1,4 +1,5 @@
 // js/passes.js
+import * as satellite from 'satellite.js';
 import { getSatrec } from './iss.js';
 
 export function getUserLocation() {
@@ -32,13 +33,13 @@ export function getNextPasses(userLat, userLon, userAlt = 0, count = 5) {
 
     while (currentMs < maxMs && passes.length < count) {
         let stepDate = new Date(currentMs);
-        let posAndVel = window.satellite.propagate(satrec, stepDate);
+        let posAndVel = satellite.propagate(satrec, stepDate);
         if (posAndVel.position && posAndVel.position !== false) {
-            let gmst = window.satellite.gstime(stepDate);
-            let positionEcf = window.satellite.eciToEcf(posAndVel.position, gmst);
+            let gmst = satellite.gstime(stepDate);
+            let positionEcf = satellite.eciToEcf(posAndVel.position, gmst);
             let observerGd = { longitude: obsLonRad, latitude: obsLatRad, height: userAlt };
             
-            let lookAngles = window.satellite.ecfToLookAngles(observerGd, positionEcf);
+            let lookAngles = satellite.ecfToLookAngles(observerGd, positionEcf);
             let elevation = lookAngles.elevation * 180 / Math.PI;
             
             if (elevation > 10) { 

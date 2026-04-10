@@ -3,105 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Live ISS Tracker</title>
+    <title>3D ISS Live Tracker | Modern Explorer</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#38bdf8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2534/2534149.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Space+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
     
     <script type="importmap">
         {
             "imports": {
                 "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "satellite.js": "https://esm.sh/satellite.js"
             }
         }
     </script>
-    <script src="https://unpkg.com/satellite.js/dist/satellite.min.js"></script>
-    <script>
-        // Make satellite library available to modules
-        window.satellite = window.satellite || satellite;
-    </script>
 </head>
-<body>
+<body class="modern-theme">
     <div id="loading" class="overlay">
         <div class="loader">
             <div class="spinner"></div>
-            <p>Acquiring TLE Data & Textures...</p>
+            <p>CONNECTING TO ISS TELEMETRY...</p>
         </div>
     </div>
 
+    <!-- Background Layer -->
     <div id="canvas-container"></div>
 
-    <main id="hud">
-        <header class="hud-panel glass">
-            <h1>ISS LIVE TRACKER</h1>
-            <div class="status">
-                <span class="dot pulse"></span>
-                <span>SYSTEM ONLINE</span>
+    <!-- Main UI HUD -->
+    <div id="app-hud">
+        <!-- Minimal Top Navigation -->
+        <header class="navbar glass">
+            <div class="logo">
+                <span class="orbit-icon">🛰️</span>
+                <h1>ISS TRACKER <span class="live-tag">LIVE</span></h1>
+            </div>
+            <div class="clock">
+                <span id="tel-time" class="mono">--:--:--</span>
+                <span class="tz">UTC</span>
             </div>
         </header>
 
-        <section class="telemetry hud-panel glass">
-            <h2>Live Telemetry</h2>
-            <div class="data-grid">
-                <div class="data-group">
-                    <label>Latitude</label>
-                    <span id="tel-lat" class="mono">--.----°</span>
+        <!-- Left Information Cluster -->
+        <aside class="telemetry-panel glass">
+            <div class="stat-group">
+                <label>POSITION</label>
+                <div class="grid-2">
+                    <div class="data-block">
+                        <span class="label">LAT</span>
+                        <span id="tel-lat" class="val mono">--.----°</span>
+                    </div>
+                    <div class="data-block">
+                        <span class="label">LON</span>
+                        <span id="tel-lon" class="val mono">--.----°</span>
+                    </div>
                 </div>
-                <div class="data-group">
-                    <label>Longitude</label>
-                    <span id="tel-lon" class="mono">--.----°</span>
+            </div>
+            
+            <div class="stat-group">
+                <label>ORBITAL STATS</label>
+                <div class="data-line">
+                    <span class="label">ALTITUDE</span>
+                    <span id="tel-alt" class="val mono">--.-- km</span>
                 </div>
-                <div class="data-group">
-                    <label>Altitude</label>
-                    <span id="tel-alt" class="mono">---.-- km</span>
+                <div class="data-line">
+                    <span class="label">VELOCITY</span>
+                    <span id="tel-vel" class="val mono">--.-- km/s</span>
                 </div>
-                <div class="data-group">
-                    <label>Velocity</label>
-                    <span id="tel-vel" class="mono">--.-- km/s</span>
+                <div class="data-line">
+                    <span class="label">PERIOD</span>
+                    <span id="tel-period" class="val mono">--.-- min</span>
                 </div>
-                <div class="data-group">
-                    <label>Period</label>
-                    <span id="tel-period" class="mono">--.-- min</span>
-                </div>
-                <div class="data-group">
-                    <label>Time (UTC)</label>
-                    <span id="tel-time" class="mono">--:--:--</span>
-                </div>
+            </div>
+        </aside>
+
+        <!-- Right Side: Interaction Corner -->
+        <section class="action-corner">
+            <!-- Floating Acquire Location Button -->
+            <div class="location-fab glass">
+                <button id="btn-locate" title="Acquire My Location">
+                    <span class="icon">📍</span>
+                    <span class="text">FIND ME</span>
+                </button>
+                <div id="loc-status" class="status-tip">Ready</div>
+            </div>
+
+            <!-- Pass Predictions (Small & Elegant) -->
+            <div class="passes-panel glass">
+                <h3>UPCOMING PASSES</h3>
+                <ul id="pass-list" class="mono">
+                    <li class="placeholder">Awaiting location...</li>
+                </ul>
             </div>
         </section>
 
-        <section class="predictions hud-panel glass">
-            <h2>Next Passes (Local)</h2>
-            <button id="btn-locate" class="btn primary">Detect My Location</button>
-            <p id="loc-status" class="status-msg"></p>
-            <ul id="pass-list" class="mono">
-                <li class="placeholder">Awaiting location...</li>
-            </ul>
-        </section>
-
-        <section class="controls hud-panel glass">
-            <h2>Controls</h2>
-            <div class="control-row">
-                <button id="btn-follow" class="btn active">Follow ISS</button>
-                <button id="btn-reset" class="btn">Reset View</button>
-            </div>
-            <div class="control-row time-control">
-                <label for="time-slider">Time Simulation</label>
-                <div class="slider-wrapper">
-                    <span>-12h</span>
-                    <input type="range" id="time-slider" min="-720" max="720" value="0" step="1">
-                    <span>+12h</span>
+        <!-- Bottom Controls -->
+        <footer class="bottom-controls">
+            <div class="control-cluster glass">
+                <div class="primary-actions">
+                    <button id="btn-follow" class="active">FOLLOW ISS</button>
+                    <button id="btn-reset">RESET VIEW</button>
                 </div>
-                <div class="time-offset mono" id="time-offset-label">Live Time</div>
-                <button id="btn-live" class="btn small hidden">Go Live</button>
+                
+                <div class="simulation-hub">
+                    <div class="slider-header">
+                        <label>TIME SIMULATION</label>
+                        <span id="time-offset-label" class="badge">LIVE</span>
+                    </div>
+                    <div class="slider-box">
+                        <span class="edge">-12H</span>
+                        <input type="range" id="time-slider" min="-720" max="720" value="0">
+                        <span class="edge">+12H</span>
+                    </div>
+                    <button id="btn-live" class="btn-sync hidden">BACK TO LIVE</button>
+                </div>
             </div>
-        </section>
-    </main>
+        </footer>
+    </div>
 
     <script type="module" src="js/main.js"></script>
-
-
 </body>
 </html>
